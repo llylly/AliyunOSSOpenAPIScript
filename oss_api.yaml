@@ -193,8 +193,9 @@ paths:
                 LoggingEnabled:
                   type: object
                   properties:
-                    LoggingEnabled:
+                    TargetPrefix:
                       type: string
+                      pattern: '[a-z]{8,16}'
                     TargetBucket:
                       type: string
       responses:
