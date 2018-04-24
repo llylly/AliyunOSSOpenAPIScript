@@ -1,0 +1,162 @@
+
+requester:
+  oss:
+    moduleName: oss.oss_requester
+    className: Requester_oss
+    extra:
+      accesskeyid: 44CF9590006BF252F707
+      accesskeysecret: OtxrzxIsfpFjA7SwPzILwy8Bw21TLhquhboDYROV
+      defaultdc: oss-cn-beijing
+      hostsuffix: .madsys.com:8080
+
+APIConf:
+  -
+    operationId: GetService
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: PutBucket
+    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: PutBucketACL
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: PutBucketLogging
+    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: PutBucketWebsite
+    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: PutBucketReferer
+    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: PutBucketLifecycle
+    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucket
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucketAcl
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucketLocation
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucketInfo
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucketLogging
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucketWebsite
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucketReferer
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: GetBucketLifecycle
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: DeleteBucket
+#    requestBodySerial: XML
+    responseBodySerial: XML
+
+  -
+    operationId: DeleteBucketLogging
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: DeleteBucketWebsite
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: DeleteBucketLifecycle
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: PutObject
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: CopyObject
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: GetObject
+#    requestBodySerial: XML
+#    responseBodySerial: XML
+  -
+    operationId: AppendObject
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: DeleteObject
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: DeleteMultipleObjects
+    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: HeadObject
+#    requestBodySerial: XML
+#    responseBodySerial: XML
+  -
+    operationId: GetObjectMeta
+#    requestBodySerial: XML
+#    responseBodySerial: XML
+  -
+    operationId: PutObjectAcl
+#    requestBodySerial: XML
+#    responseBodySerial: XML
+  -
+    operationId: GetObjectAcl
+#    requestBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: PostObject
+#    requestBodySerial: XML
+#    CAUTION: form-data request body! Should NOT toggle it!
+    responseBodySerial: XML
+  -
+    operationId: PutSymlink
+#    requestBodySerial: XML
+#    responseBodySerial: XML
+    responseBodySerial: XML
+  -
+    operationId: GetSymlink
+#    requestBodySerial: XML
+#    responseBodySerial: XML
+  -
+    operationId: RestoreObject
+#    requestBodySerial: XML
+#    responseBodySerial: XML
