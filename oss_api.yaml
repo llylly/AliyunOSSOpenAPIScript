@@ -1,0 +1,1294 @@
+openapi: 3.0.0
+servers:
+  - url: 'oss://127.0.0.1:8080'
+info:
+  description: Object Storage Service of madsys.com
+  version: "1.0.0"
+  title: OSS API Series
+tags:
+  - name: service
+    description: Service related operations
+  - name: bucket
+    description: Bucket related operations
+  - name: object
+    description: Object related operations
+components:
+  schemas:
+    location:
+      type: string
+      enum: ['oss-cn-beijing']
+    storage_class:
+      type: string
+      enum: ['Standard', 'IA', 'Archive']
+    acl:
+      type: string
+      enum: ['public-read-write', 'public-read', 'private']
+    bucket_name:
+      type: string
+      pattern: '[a-z0-9]{8,16}'
+    object_name:
+      type: string
+      pattern: '[a-z][a-z0-9]{8,16}'
+    object_acl:
+      type: string
+      enum: ['default', 'private', 'public-read-write', 'public-read']
+    error_response:
+      type: object
+      properties:
+        Code:
+          type: string
+        Message:
+          type: string
+        RequestId:
+          type: string
+        HostId:
+          type: string
+  responses:
+    error:
+      description: 'error'
+      content:
+        main:
+          schema:
+            $ref: '#/components/schemas/error_response'
+  parameters:
+    BucketName:
+      name: BucketName
+      in: path
+      required: true
+      description: The bucket name
+      style: simple
+      schema:
+        $ref: '#/components/schemas/bucket_name'
+    x-oss-acl:
+      name: x-oss-acl
+      in: header
+      description: Bucket request permission
+      style: simple
+      schema:
+        $ref: '#/components/schemas/acl'
+    ObjectName:
+      name: ObjectName
+      in: path
+      required: true
+      description: The object name
+      style: simple
+      schema:
+        $ref: '#/components/schemas/object_name'
+paths:
+  /GetService:
+    get:
+      tags:
+        - service
+      summary: Return all buckets of current account
+      x-realPath: '/'
+      operationId: GetService
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: object
+                xml:
+                  name: ListAllMyBucketsResult
+                properties:
+                  Owner:
+                    type: object
+                    properties:
+                      ID:
+                        type: string
+                      DisplayName:
+                        type: string
+                  Buckets:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      type: object
+                      xml:
+                        name: Bucket
+                      properties:
+                        Name:
+                          type: string
+                        CreateDate:
+                          type: string
+                          format: date-time
+                        Location:
+                          $ref: '#/components/schemas/location'
+                        ExtranetEndpoint:
+                          type: string
+                        IntranetEndpoint:
+                          type: string
+                        StorageClass:
+                          type: string
+        default:
+          $ref: '#/components/responses/error'
+  /PutBucket:
+    put:
+      tags:
+        - bucket
+      summary: create a bucket
+      x-realPath: '/'
+      operationId: PutBucket
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/x-oss-acl'
+      requestBody:
+        content:
+          default:
+            schema:
+              type: object
+              properties:
+                StorageClass:
+                  $ref: '#/components/schemas/storage_class'
+                LocationConstraint:
+                  $ref: '#/components/schemas/location'
+              xml:
+                name: CreateBucketConfiguration
+        required: true
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutBucketACL:
+    put:
+      tags:
+        - bucket
+      summary: change bucket permission setting
+      x-realPath: '/?acl'
+      operationId: PutBucketACL
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/x-oss-acl'
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutBucketLogging:
+    put:
+      tags:
+        - bucket
+      summary: open or close logging
+      x-realPath: '/?logging'
+      operationId: PutBucketLogging
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      requestBody:
+        content:
+          default:
+            schema:
+              type: object
+              xml:
+                name: BucketLoggingStatus
+              properties:
+                LoggingEnabled:
+                  type: object
+                  properties:
+                    LoggingEnabled:
+                      type: string
+                    TargetBucket:
+                      type: string
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutBucketWebsite:
+    put:
+      tags:
+        - bucket
+      summary: static website creation
+      x-realPath: '/?website'
+      operationId: PutBucketWebsite
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      requestBody:
+        content:
+          default:
+            schema:
+              type: object
+              xml:
+                name: WebsiteConfiguration
+              required: [IndexDocument]
+              properties:
+                IndexDocument:
+                  type: object
+                  properties:
+                    Suffix:
+                      type: string
+                      pattern: '[a-z]+(\.html)'
+                ErrorDocument:
+                  type: object
+                  properties:
+                    Key:
+                      type: string
+                      pattern: '[a-z]+(\.html)'
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutBucketReferer:
+    put:
+      tags:
+        - bucket
+      summary: configure bucket referer settings
+      x-realPath: '/?referer'
+      operationId: PutBucketReferer
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      requestBody:
+        content:
+          default:
+            schema:
+              type: object
+              xml:
+                name: RefererConfiguration
+              required: [AllowEmptyReferer, RefererList]
+              properties:
+                AllowEmptyReferer:
+                  type: boolean
+                  default: true
+                RefererList:
+                  type: array
+                  xml:
+                    wrapped: true
+                  items:
+                    type: string
+                    pattern: '(http)[s]{0,1}(://www\.)(([a-z]{1,8})|(\*))(\.com)'
+                    xml:
+                      name: Referer
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutBucketLifecycle:
+    put:
+      tags:
+        - bucket
+      summary: set bucket lifecycle rules
+      x-realPath: '/?lifecycle'
+      operationId:  PutBucketLifecycle
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      requestBody:
+        content:
+          default:
+            schema:
+              type: array
+              xml:
+                name: LifecycleConfiguration
+                wrapped: true
+              maxItems: 1000
+              items:
+                type: object
+                xml:
+                  name: Rule
+                properties:
+                  ID:
+                    type: string
+                  Prefix:
+                    type: string
+                  Status:
+                    type: string
+                    enum: ['Enabled', 'Disabled']
+                  Expiration:
+                    type: object
+                    properties:
+                      Days:
+                        type: integer
+                        minimum: 1
+                      CreatedBeforeDate:
+                        type: string
+                        format: date-time
+                    description:
+                      Only one and at least one of the two fields should exist.
+                  AbortMultipartUpload:
+                    type: object
+                    properties:
+                      Days:
+                        type: integer
+                        minimum: 1
+                      CreatedBeforeDate:
+                        type: string
+                        format: date-time
+                    description:
+                      Only one and at least one of the two fields should exist.
+                  Transitions:
+                    type: array
+                    xml:
+                      wrapped: false
+                    items:
+                      type: object
+                      xml:
+                        name: Transition
+                      properties:
+                        StorageClass:
+                          type: string
+                          enum: ['IA', 'Archive']
+                        Days:
+                          type: integer
+                          minimum: 1
+                        CreatedBeforeDate:
+                          type: string
+                          format: date-time
+                      description:
+                        Only one and at least one of the time fields should exist.
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucket:
+    get:
+      tags:
+        - bucket
+      summary: get detailed info of the bucket
+      x-realPath: '/'
+      operationId: GetBucket
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          in: query
+          name: prefix
+          schema:
+            type: string
+        -
+          in: query
+          name: max-keys
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 1000
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: object
+                xml:
+                  name: ListBucketResult
+                properties:
+                  Name:
+                    type: string
+                  Prefix:
+                    type: string
+                  MaxKeys:
+                    type: integer
+                  IsTruncated:
+                    type: boolean
+                  Contents:
+                    type: array
+                    xml:
+                      wrapped: false
+                    items:
+                      type: object
+                      properties:
+                        Key:
+                          type: string
+                        LastModified:
+                          type: string
+                          format: date-time
+                        ETag:
+                          type: string
+                        Type:
+                          type: string
+                        Size:
+                          type: integer
+                        StorageClass:
+                          $ref: '#/components/schemas/storage_class'
+                        Owner:
+                          type: object
+                          properties:
+                            ID:
+                              type: string
+                            DisplayName:
+                              type: string
+
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucketAcl:
+    get:
+      tags:
+        - bucket
+      summary: get permission level of certain bucket
+      x-realPath: '/?acl'
+      operationId: GetBucketAcl
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: object
+                xml:
+                  name: AccessControlPolicy
+                properties:
+                  Owner:
+                    type: object
+                    properties:
+                      ID:
+                        type: string
+                      DisplayName:
+                        type: string
+                  AccessControlList:
+                    type: object
+                    properties:
+                      Grant:
+                        $ref: '#/components/schemas/acl'
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucketLocation:
+    get:
+      tags:
+        - bucket
+      summary: get bucket location
+      x-realPath: '/?location'
+      operationId: GetBucketLocation
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                $ref: '#/components/schemas/location'
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucketInfo:
+    get:
+      tags:
+        - bucket
+      summary: get bucket info
+      x-realPath: '/?bucketInfo'
+      operationId: GetBucketInfo
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: array
+                xml:
+                  name: BucketInfo
+                  wrapped: true
+                items:
+                  type: object
+                  xml:
+                    name: Bucket
+                  properties:
+                    CreationDate:
+                      type: string
+                      format: date-time
+                    ExtranetEndpoint:
+                      type: string
+                    IntranetEndpoint:
+                      type: string
+                    Location:
+                      $ref: '#/components/schemas/location'
+                    Name:
+                      type: string
+                    Owner:
+                      type: object
+                      properties:
+                        ID:
+                          type: string
+                        DisplayName:
+                          type: string
+                    AccessControlList:
+                      type: object
+                      properties:
+                        Grant:
+                          $ref: '#/components/schemas/acl'
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucketLogging:
+    get:
+      tags:
+        - bucket
+      summary: get bucket logging
+      x-realPath: '/?logging'
+      operationId: GetBucketLogging
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: object
+                properties:
+                  LoggingEnabled:
+                    type: object
+                    properties:
+                      TargetBucket:
+                        type: string
+                      TargetPrefix:
+                        type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucketWebsite:
+    get:
+      tags:
+        - bucket
+      summary: get bucket website
+      x-realPath: '/?website'
+      operationId: GetBucketWebsite
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: object
+                properties:
+                  IndexDocument:
+                    type: object
+                    properties:
+                      Suffix:
+                        type: string
+                  ErrorDocument:
+                    type: object
+                    properties:
+                      Key:
+                        type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucketReferer:
+    get:
+      tags:
+        - bucket
+      summary: get bucket referer
+      x-realPath: '/?referer'
+      operationId: GetBucketReferer
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: object
+                properties:
+                  AllowEmptyReferer:
+                    type: boolean
+                  RefererList:
+                    type: array
+                    xml:
+                      wrapped: true
+                    items:
+                      xml:
+                        name: Referer
+                      type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetBucketLifecycle:
+    get:
+      tags:
+        - bucket
+      summary: get bucket logging
+      x-realPath: '/?lifecycle'
+      operationId: GetBucketLifecycle
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: array
+                xml:
+                  wrapped: true
+                items:
+                  type: object
+                  xml:
+                    name: Rule
+                  properties:
+                    ID:
+                      type: string
+                    Prefix:
+                      type: string
+                    Status:
+                      type: string
+                      enum: ['Enabled', 'Disabled']
+                    Expiration:
+                      type: object
+                      properties:
+                        Days:
+                          type: integer
+                          minimum: 1
+                        CreatedBeforeDate:
+                          type: string
+                          format: date-time
+                      description:
+                        Only one and at least one of the two fields should exist.
+                    AbortMultipartUpload:
+                      type: object
+                      properties:
+                        Days:
+                          type: integer
+                          minimum: 1
+                        CreatedBeforeDate:
+                          type: string
+                          format: date-time
+                      description:
+                        Only one and at least one of the two fields should exist.
+                    Transitions:
+                      type: array
+                      xml:
+                        wrapped: false
+                      items:
+                        type: object
+                        xml:
+                          name: Transition
+                        properties:
+                          StorageClass:
+                            type: string
+                            enum: ['IA', 'Archive']
+                          Days:
+                            type: integer
+                            minimum: 1
+                          CreatedBeforeDate:
+                            type: string
+                            format: date-time
+                        description:
+                          Only one and at least one of the time fields should exist.
+        default:
+          $ref: '#/components/responses/error'
+
+  /DeleteBucket:
+    delete:
+      tags:
+        - bucket
+      summary: delete an empty bucket
+      x-realPath: '/'
+      operationId: DeleteBucket
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /DeleteBucketLogging:
+    delete:
+      tags:
+        - bucket
+      summary: close the logging configuration of the specified bucket
+      x-realPath: '/?logging'
+      operationId: DeleteBucketLogging
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /DeleteBucketWebsite:
+    delete:
+      tags:
+        - bucket
+      summary: close the static website hosting mode of the specified bucket
+      x-realPath: '/?website'
+      operationId: DeleteBucketWebsite
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /DeleteBucketLifecycle:
+    delete:
+      tags:
+        - bucket
+      summary: cancel all lifecycle rules of the specified bucket
+      x-realPath: '/?lifecycle'
+      operationId: DeleteBucketLifecycle
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutObject:
+    put:
+      tags:
+        - object
+      summary: create an object
+      x-realPath: '/{ObjectName}'
+      operationId: PutObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/x-oss-acl'
+        -
+          $ref: '#/components/parameters/ObjectName'
+      requestBody:
+        content:
+          default:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /CopyObject:
+    put:
+      tags:
+        - object
+      summary: copy an object to another bucket or the same bucket which has another name
+      x-realPath: '/{ObjectName}'
+      operationId: CopyObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: SourceBucketName
+          in: header
+          required: true
+          style: simple
+          schema:
+            $ref: '#/components/schemas/bucket_name'
+        -
+          name: SourceObjectName
+          in: header
+          required: true
+          style: simple
+          schema:
+            $ref: '#/components/schemas/object_name'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: object
+                properties:
+                  LastModified:
+                    type: string
+                    description: Datetime in HTML1.1 format
+                  ETag:
+                    type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetObject:
+    get:
+      tags:
+        - object
+      summary: get the object
+      x-realPath: '/{ObjectName}'
+      operationId: GetObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: rangeLeft
+          in: header
+          schema:
+            # type: 'null'
+            type: integer
+            enum: [1]
+        -
+          name: rangeRight
+          in: header
+          schema:
+            # type: 'null'
+            type: integer
+            enum: [10]
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: string
+                format: byte
+        default:
+          $ref: '#/components/responses/error'
+
+  /AppendObject:
+    put:
+      tags:
+        - object
+      summary: append data to an existing object
+      x-realPath: '/{ObjectName}'
+      operationId: AppendObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: opName
+          in: query
+          style: simple
+          schema:
+            type: string
+            enum: ['append']
+        -
+          name: position
+          in: query
+          schema:
+            type: integer
+      requestBody:
+        content:
+          default:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            x-oss-hash-crc64ecma:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /DeleteObject:
+    delete:
+      tags:
+        - object
+      summary: delete object in a bucket
+      x-realPath: '/{ObjectName}'
+      operationId: DeleteObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /DeleteMultipleObjects:
+    post:
+      tags:
+        - object
+      summary: delete multiple objects with verbose configs
+      x-realPath: '/?delete'
+      operationId: DeleteMultipleObjects
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      requestBody:
+        content:
+          default:
+            schema:
+              type: object
+              xml:
+                name: Delete
+              properties:
+                Quiet:
+                  type: boolean
+                Objects:
+                  type: array
+                  xml:
+                    wrapped: false
+                  items:
+                    type: object
+                    xml:
+                      name: Object
+                    properties:
+                      Key:
+                        type: string
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                type: array
+                xml:
+                  name: DeleteResult
+                  wrapped: true
+                items:
+                  xml:
+                    name: Deleted
+                  type: object
+                  properties:
+                    Key:
+                      type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /HeadObject:
+    head:
+      tags:
+        - object
+      summary: return only the header of requested object
+      x-realPath: '/{ObjectName}'
+      operationId: HeadObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            Content-Length:
+              schema:
+                type: integer
+            Content-Type:
+              schema:
+                type: string
+            ETag:
+              schema:
+                type: string
+            Date:
+              schema:
+                type: string
+                description: 'Normal HTTP 1.1 datetime format'
+            x-oss-object-type:
+              schema:
+                type: string
+            x-oss-storage-class:
+              schema:
+                $ref: '#/components/schemas/storage_class'
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetObjectMeta:
+    get:
+      tags:
+        - object
+      summary: return the basic meta information of the requested object
+      x-realPath: '/{ObjectName}'
+      operationId: GetObjectMeta
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: opName
+          in: query
+          style: simple
+          schema:
+            type: string
+            enum: ['objectMeta']
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            ETag:
+              schema:
+                type: string
+            Content-Length:
+              schema:
+                type: integer
+            Last-Modified:
+              schema:
+                type: string
+                description: 'Normal HTTP 1.1 datetime format'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutObjectAcl:
+    put:
+      tags:
+        - object
+      summary: modify permission of requested object
+      x-realPath: '/{ObjectName}'
+      operationId: PutObjectAcl
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: opName
+          in: query
+          style: simple
+          schema:
+            type: string
+            enum: ['acl']
+        -
+          name: x-oss-object-acl
+          in: header
+          style: simple
+          schema:
+            $ref: '#/components/schemas/object_acl'
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetObjectAcl:
+    get:
+      tags:
+        - object
+      summary: modify permission of requested object
+      x-realPath: '/{ObjectName}'
+      operationId: GetObjectAcl
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: opName
+          in: query
+          style: simple
+          schema:
+            type: string
+            enum: ['acl']
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                xml:
+                  name: AccessControlPolicy
+                type: object
+                properties:
+                  Owner:
+                    type: object
+                    properties:
+                      ID:
+                        type: string
+                      DisplayName:
+                        type: string
+                  AccessControlList:
+                    type: object
+                    properties:
+                      Grant:
+                        $ref: '#/components/schemas/acl'
+        default:
+          $ref: '#/components/responses/error'
+
+  /PostObject:
+    post:
+      tags:
+        - object
+      summary: post files to the bucket using HTML form
+      x-realPath: '/'
+      operationId: PostObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+      requestBody:
+        content:
+          multipart:
+            schema:
+              type: object
+              properties:
+                fileName:
+                  $ref: '#/components/schemas/object_name'
+                fileData:
+                  type: string
+                  format: binary
+                OSSAccessKeyId:
+                  type: string
+                  description: "Generate in customized requester"
+                policy:
+                  type: string
+                  description: "Generate in customized requester"
+                Signature:
+                  type: string
+                  description: "Generate in customized requester"
+                success_action_status:
+                  type: string
+#                  enum: ['200', '201', '204']
+                  enum: ['200']
+                x-oss-object-acl:
+                  type: string
+                  enum: ['public-read', 'private', 'public-read-write']
+                x-oss-meta-verify:
+                  type: string
+                  description: "For verification. No alter."
+                  enum: ['me']
+
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            main:
+              schema:
+                xml:
+                  name: PostResponse
+                type: object
+                properties:
+                  Bucket:
+                    $ref: '#/components/schemas/bucket_name'
+                  ETag:
+                    type: string
+                  Location:
+                    type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /PutSymlink:
+    put:
+      tags:
+        - object
+      summary: establish a symlink to existing object
+      x-realPath: '/{ObjectName}'
+      operationId: PutSymlink
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: x-oss-symlink-target
+          in: header
+          style: simple
+          schema:
+            $ref: '#/components/schemas/object_name'
+        -
+          name: opName
+          in: query
+          style: simple
+          schema:
+            type: string
+            enum: ['symlink']
+      responses:
+        '200':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/error'
+
+  /GetSymlink:
+    get:
+      tags:
+        - object
+      summary: get the object which symlink points to
+      x-realPath: '/{ObjectName}'
+      operationId: GetSymlink
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: opName
+          in: query
+          style: simple
+          schema:
+            type: string
+            enum: ['symlink']
+      responses:
+        '200':
+          description: 'Success'
+          headers:
+            x-oss-symlink-target:
+              style: simple
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/error'
+
+  /RestoreObject:
+    post:
+      tags:
+        - object
+      summary: unfreeze an archive object
+      x-realPath: '/{ObjectName}'
+      operationId: RestoreObject
+      parameters:
+        -
+          $ref: '#/components/parameters/BucketName'
+        -
+          $ref: '#/components/parameters/ObjectName'
+        -
+          name: opName
+          in: query
+          style: simple
+          schema:
+            type: string
+            enum: ['restore']
+      responses:
+        '202':
+          description: 'First time: begin unfreezing'
+        '200':
+          description: 'Unfreeze finished. State time 1 day extended.'
+        '409':
+          description: 'In freezing progress'
+          content:
+            main:
+              schema:
+                $ref: '#/components/schemas/object_acl'
+        '400':
+          description: 'The object is not of archive type.'
+          content:
+            main:
+              schema:
+                $ref: '#/components/schemas/object_acl'
+        '404':
+          description: 'Object not found.'
+          content:
+            main:
+              schema:
+                $ref: '#/components/schemas/object_acl'
+        default:
+          $ref: '#/components/responses/error'
