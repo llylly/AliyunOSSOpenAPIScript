@@ -154,13 +154,13 @@ paths:
         default:
           $ref: '#/components/responses/error'
 
-  /PutBucketACL:
+  /PutBucketAcl:
     put:
       tags:
         - bucket
       summary: change bucket permission setting
       x-realPath: '/?acl'
-      operationId: PutBucketACL
+      operationId: PutBucketAcl
       parameters:
         -
           $ref: '#/components/parameters/BucketName'
@@ -848,16 +848,16 @@ paths:
           name: rangeLeft
           in: header
           schema:
-            # type: 'null'
-            type: integer
-            enum: [1]
+            type: 'null'
+#            type: integer
+#            enum: [1]
         -
           name: rangeRight
           in: header
           schema:
-            # type: 'null'
-            type: integer
-            enum: [10]
+             type: 'null'
+#            type: integer
+#            enum: [10]
       responses:
         '200':
           description: 'Success'

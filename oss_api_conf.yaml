@@ -21,7 +21,7 @@ APIConf:
     responseBodySerial: XML
 
   -
-    operationId: PutBucketACL
+    operationId: PutBucketAcl
 #    requestBodySerial: XML
     responseBodySerial: XML
 
